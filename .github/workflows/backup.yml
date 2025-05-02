@@ -27,13 +27,17 @@ jobs:
       - name: Back up this repository only
         run: |
           mkdir -p backup
-          github-backup thisismr900 \  # GitHub username
+          REPO_NAME=$(basename "${{ github.repository }}")
+          github-backup \
             --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
-            --repository ${{ github.repository }} \
+            --repository "$REPO_NAME" \
             --output-directory ./backup \
             --issues --issue-comments \
             --pulls --pull-comments --pull-commits --pull-details \
-            --labels --milestones --releases --bare --wikis
+            --labels --milestones --releases --bare --wikis \
+            ${{ github.actor }}
+
+          
       
 
 
