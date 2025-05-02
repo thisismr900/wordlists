@@ -28,12 +28,12 @@ jobs:
         run: |
           mkdir backup
           github-backup ${{ github.repository_owner }} \
-            --repository ${{ github.event.repository.name }} \
+            --repository ${{ github.repository }} \
             --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
             --output-directory ./backup \
-            --issues --issue-comments --pull-requests \
-            --pull-request-comments --labels --milestones --releases \
-            --bare --repositories --starred --wikis
+            --issues --issue-comments --pulls \
+            --pull-comments --pull-commits --pull-details \
+            --labels --milestones --releases --bare --wikis
 
       - name: Compress backup into tar.gz
         run: tar -czf "${{ github.event.repository.name }}-backup.tar.gz" -C backup .
