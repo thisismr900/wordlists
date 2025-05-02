@@ -1,0 +1,51 @@
+name: Weekly GitHub Repo Backup
+
+on:
+  schedule:
+    - cron: '0 10 * * 0' # Runs every Sunday at 10:00 UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install github-backup
+        run: pip install github-backup
+
+      - name: Run github-backup
+        run: |
+          mkdir backup
+          github-backup ${{ github.repository_owner }} \
+            --repository ${{ github.event.repository.name }} \
+            --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
+            --output-directory ./backup \
+            --issues --issue-comments --pull-requests \
+            --pull-request-comments --labels --milestones --releases \
+            --bare --repositories --starred --wikis
+
+      - name: Compress backup into tar.gz
+        run: tar -czf "${{ github.event.repository.name }}-backup.tar.gz" -C backup .
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: your-region
+
+      - name: Upload backup to S3
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          aws s3 cp "${{ github.event.repository.name }}-backup.tar.gz" \
+            s3://your-s3-bucket-name/github-backups/${{ github.event.repository.name }}-${TIMESTAMP}.tar.gz
