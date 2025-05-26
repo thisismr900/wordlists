@@ -1,70 +1,70 @@
-name: Weekly GitHub Repo Backup
+# name: Weekly GitHub Repo Backup
 
-on:
-  schedule:
-    - cron: '0 10 * * 0' # Runs every Sunday at 10:00 UTC
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: '0 10 * * 0' # Runs every Sunday at 10:00 UTC
+#   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
 
-jobs:
-  backup:
-    runs-on: ubuntu-latest
+# jobs:
+#   backup:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.x'
 
-      - name: Install github-backup
-        run: pip install github-backup
+#       - name: Install github-backup
+#         run: pip install github-backup
       
-      - name: Back up this repository only
-        run: |
-          mkdir -p backup
-          github-backup \
-            ${{ github.repository_owner }} \
-            --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
-            --repository "${{ github.event.repository.name }}" \
-            --output-directory ./backup \
-            --issues --issue-comments \
-            --pulls --pull-comments --pull-commits --pull-details \
-            --labels --milestones --releases --bare --wikis
-        env:
-          PERSONAL_GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+#       - name: Back up this repository only
+#         run: |
+#           mkdir -p backup
+#           github-backup \
+#             ${{ github.repository_owner }} \
+#             --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
+#             --repository "${{ github.event.repository.name }}" \
+#             --output-directory ./backup \
+#             --issues --issue-comments \
+#             --pulls --pull-comments --pull-commits --pull-details \
+#             --labels --milestones --releases --bare --wikis
+#         env:
+#           PERSONAL_GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
 
-      # - name: Back up this repository only
-      #   run: |
-      #     mkdir -p backup
-      #     REPO_NAME=$(basename "${{ github.repository }}")
-      #     github-backup \
-      #       --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
-      #       --repository "$REPO_NAME" \
-      #       --output-directory ./backup \
-      #       --issues --issue-comments \
-      #       --pulls --pull-comments --pull-commits --pull-details \
-      #       --labels --milestones --releases --bare --wikis \
-      #       ${{ github.actor }}
-      #   env:
-      #     PERSONAL_GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+#       # - name: Back up this repository only
+#       #   run: |
+#       #     mkdir -p backup
+#       #     REPO_NAME=$(basename "${{ github.repository }}")
+#       #     github-backup \
+#       #       --token ${{ secrets.PERSONAL_GITHUB_TOKEN }} \
+#       #       --repository "$REPO_NAME" \
+#       #       --output-directory ./backup \
+#       #       --issues --issue-comments \
+#       #       --pulls --pull-comments --pull-commits --pull-details \
+#       #       --labels --milestones --releases --bare --wikis \
+#       #       ${{ github.actor }}
+#       #   env:
+#       #     PERSONAL_GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
 
-      - name: Create a tarball of the complete GitHub backup
-        run: tar -czvf ./archive.tar.gz ./backup/
+#       - name: Create a tarball of the complete GitHub backup
+#         run: tar -czvf ./archive.tar.gz ./backup/
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v3
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ap-south-1
 
-      - name: Upload backup to S3
-        run: |
-          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
-          aws s3 cp "${{ github.event.repository.name }}-backup.tar.gz" \
-            s3://your-s3-bucket-name/github-backups/${{ github.event.repository.name }}-${TIMESTAMP}.tar.gz
+#       - name: Upload backup to S3
+#         run: |
+#           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+#           aws s3 cp "${{ github.event.repository.name }}-backup.tar.gz" \
+#             s3://your-s3-bucket-name/github-backups/${{ github.event.repository.name }}-${TIMESTAMP}.tar.gz
